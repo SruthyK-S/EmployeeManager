@@ -107,6 +107,6 @@ public class EmployeeController {
 		System.out.println(csvFormat);
 		dataTransformation(csvFormat, outputFilePath);
 		
-		return "Data enteres successfully";
+		return "Data entered successfully";
 	}
 }
