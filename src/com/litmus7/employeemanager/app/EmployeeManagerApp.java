@@ -72,7 +72,7 @@ public class EmployeeManagerApp {
 	    	}
 		    else
 		    {
-		    	System.out.println("Terminated");
+		    	System.out.println("Exited the application");
 		    }
 		    
 		}
