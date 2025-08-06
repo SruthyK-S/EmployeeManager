@@ -9,8 +9,8 @@ import java.util.List;
 public class EmployeeDAO{
 	
 	private static final String URL = "jdbc:mysql://localhost:3306/employeedatabase";
-	private static final String USER = "student";
-	private static final String PASSWORD = "student";
+	private static final String USER = "";
+	private static final String PASSWORD = "";
 	Statement myStmt = null;
 	PreparedStatement preStmt = null ;
 	StringBuilder result = new StringBuilder();
