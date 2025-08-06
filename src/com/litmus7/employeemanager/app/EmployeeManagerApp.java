@@ -1,34 +1,43 @@
 package com.litmus7.employeemanager.app;
+import com.litmus7.employeemanager.controller.EmployeeController;
+import com.litmus7.employeemanager.dto.Response;
+
 import java.util.Scanner;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
-import com.litmus7.employeemanager.controller.EmployeeController;
-import com.litmus7.employeemanager.dto.Employee;
 
 public class EmployeeManagerApp {
 
-	public static void main(String[] args) throws IOException {
-		// TODO Auto-generated method stub
+	public static void main(String[] args) 
+	{
 		
 		final String inputFilePath = "employees.txt";
 		final String outputFilePath = "employees.csv";
 		Scanner scn = new Scanner(System.in);  
-		EmployeeController empCon = new EmployeeController(inputFilePath, outputFilePath);
-		
-		
-		String option = "";
-		String result = "";
-		System.out.println("Employee Management App");
-		
-		while(!option.equals("q") && !option.equals("Q"))
+		EmployeeController controller = null;
+		try 
 		{
-			System.out.println("Choose one service");
-			System.out.println("1 - Read data from text file and add it to database"
-					+ "\n2 - Enter data from console"
-					+ "\n3 - Load data from output File"
-					+ "\n'q' - quit");
+			controller = new EmployeeController(inputFilePath, outputFilePath);
+		} catch (IOException e) {
+			System.out.println("Invalid file path!");
+		}
+		
+		String option;
+		System.out.println("Employee Management App");
+		boolean exit = false;
+		
+		while(!exit)
+		{
+			System.out.println("\nChoose one service");
+			System.out.println("1 - Read data from text file"
+					+ "\n2 - Add the read data to database"
+					+ "\n3 - Enter one employee data"
+					+ "\n4 - Get all employee data"
+					+ "\n5 - Get one employee data"
+					+ "\n6 - Delete one employee data"
+					+ "\n7 - Update one employee data"
+					+ "\n8 - Quit"
+					);
 			
 		    option = scn.next();  
 		    switch(option) {
@@ -36,17 +45,23 @@ public class EmployeeManagerApp {
 		    
 			    case "1":
 			    {
-	//		    	System.out.println("");
-			    	result = empCon.dataIngestion();
+
+			    	String result = controller.getDataFromTextFile();
 			    	System.out.println(result);
 			    	break;
 			    	
 			    }
-			    case "2":
+			    case "2": 
+			    {
+			    	Response<Integer> result = controller.writeDataToCSV();
+			    	System.out.println(result.getMessage());
+			    	break;
+			    }
+			    case "3":
 		    	{
-			    	System.out.println("Enter the employee details seperated by comma");
+			    	System.out.println("Enter the employee details: ");
 			    	System.out.println("ID : ");
-			    	int ID = scn.nextInt();
+			    	String ID = scn.next();
 			    	
 			    	System.out.println("First Name : ");
 			    	String firstName = scn.next();
@@ -63,29 +78,86 @@ public class EmployeeManagerApp {
 			    	
 			    	System.out.println("Joining date(yyyy-MM-dd) : ");
 			    	String date = scn.next();
-			    	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-			    	LocalDate joiningDate = LocalDate.parse(date, formatter);
+
 			        
 			    	
-			    	System.out.println("Active Status(T/F) : ");
+			    	System.out.println("Active Status(true/false) : ");
 			    	String activeStatus = scn.next();
-			    	boolean active = activeStatus.equals("T")? true : false;
+
 			    	
+			    	Response<Integer> result = controller.getSingleDataFromUser(ID, firstName, lastName, mobile,
+			    										  email, date, activeStatus);
 			    	
-			    	Employee emp = new Employee(ID, firstName, lastName, mobile, email, joiningDate, active);
-		    		result = empCon.dataEntry(emp, outputFilePath);
-		    		System.out.println(result);
+		    		System.out.println(result.getMessage());
 		    		break;
 		    	}
-			    case "3": 
+			    case "4":
 			    {
-			    	result = empCon.loadData();
-			    	System.out.println(result);
+			    	Response<String> result = controller.getAllEmployees();
+			    	if(result.isSuccess())
+			    		System.out.println(result.getData());
+			    	else
+			    		System.out.println(result.getMessage());
+			    	break;
+			    }
+			    case "5":
+			    {
+			    	System.out.println("Enter the ID: ");
+			    	int ID = scn.nextInt();
+			    	Response<String> result = controller.getEmployeeById(ID);
+			    	if(result.isSuccess())
+			    		System.out.println(result.getData());
+			    	else
+			    		System.out.println(result.getMessage());
+			    	break;
+			    }
+			    case "6":
+			    {
+			    	System.out.println("Enter the ID of employee to be deleted: ");
+			    	int ID = scn.nextInt();
+			    	Response<Integer> result = controller.deleteEmployeeById(ID);
+			    	System.out.println(result.getMessage());	
+			    	break;
+			    	
+			    }
+			    case "7":
+			    {
+			    	System.out.println("Enter the employee details: ");
+			    	System.out.println("ID : ");
+			    	String ID = scn.next();
+			    	
+			    	System.out.println("First Name : ");
+			    	String firstName = scn.next();
+			    
+			    	
+			    	System.out.println("Last Name : ");
+			    	String lastName = scn.next();
+			    	
+			    	System.out.println("Mobile Number : ");
+			    	String mobile = scn.next();
+			    	
+			    	System.out.println("Email address : ");
+			    	String email = scn.next();
+			    	
+			    	System.out.println("Joining date(yyyy-MM-dd) : ");
+			    	String date = scn.next();
+
+			        
+			    	
+			    	System.out.println("Active Status(true/false) : ");
+			    	String activeStatus = scn.next();
+
+			    	
+			    	Response<Integer> result = controller.updateEmployee(ID, firstName, lastName, mobile,
+			    										  email, date, activeStatus);
+			    	
+			    	System.out.println(result.getMessage());	
 			    	break;
 			    }
 			    default: 
 			    {
 			    	System.out.println("Exited the application");
+			    	exit = true;
 			    }
 		    }
 		    
