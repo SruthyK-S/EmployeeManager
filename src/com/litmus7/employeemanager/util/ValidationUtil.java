@@ -1,159 +1,78 @@
 package com.litmus7.employeemanager.util;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.io.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
-import com.litmus7.employeemanager.dto.Employee;
+
 
 public class ValidationUtil 
 {
 
-	String outputFilePath;
+	String message = "valid";
 	
-	public ValidationUtil(String outputFilePath)
+	public String isValidID(String newID)
 	{
-		this.outputFilePath = outputFilePath;
-		
-	}
-	
-	
-	public boolean isDuplicateID(int newID, String outputFilePath) 
-	{
-		
-	    try (BufferedReader reader = new BufferedReader(new FileReader(outputFilePath))) 
-	    {
-	        String line;
-	        reader.readLine();
-
-	        while ((line = reader.readLine()) != null) {
-	            String[] parts = line.split(",");
-	            if (parts.length > 0) {
-	                int existingID = Integer.parseInt(parts[0].trim());
-	                if (existingID == newID) 
-	                {
-	                    return true; 
-	                }
-	            }
-	        }
-
-	    } catch (IOException | NumberFormatException e) {
-	        e.printStackTrace();
+		try {
+	        int ID = Integer.parseInt(newID);
+	        if (ID <= 0)
+	        	return "Invalid ID! Please enter a positive integer greater than zero.";
+	        
+	    } catch (NumberFormatException e) {
+	        return "Invalid ID! Please enter a valid numeric integer.";
 	    }
-
-	    return false; 
+		return "valid";
 	}
 	
-	public boolean isDuplicateMobile(String mobile) 
+	public String isValidName(String name)
 	{
-	    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFilePath))) 
-	    {
-	        String line;
-	        reader.readLine();
-
-	        while ((line = reader.readLine()) != null) {
-	            
-	            String[] parts = line.split(",");
-	            if (parts.length > 0) {
-	                String existingNumber = parts[3];
-	                if (existingNumber.equals(mobile)) {
-	                    return true; 
-	                }
-	            }
-	        }
-
-	    } catch (IOException | NumberFormatException e) {
-	        e.printStackTrace();
-	    }
-
-	    return false; 
+        if( name.isEmpty())
+        	return "Name cannot be empty";
+        if (!name.matches("[a-zA-Z\\-' ]+"))
+        	return "Name should only contain letters!";
+       
+		return "valid";
 	}
 	
-	public boolean isDuplicateEmail(String email) 
-	{
-	    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFilePath))) 
-	    {
-	        String line;
-	        reader.readLine();
+	public String isValidNumber(String mobileNumber) {
+	    if (mobileNumber == null || mobileNumber.isEmpty())
+	        return "Mobile Number cannot be empty";
 
-	        while ((line = reader.readLine()) != null) {
+	    if (!mobileNumber.matches("\\d{10}"))
+	        return "Invalid mobile number. Must be 10 digits.";
+	    	// does not define if it is format error
 
-	            String[] parts = line.split(",");
-	            if (parts.length > 0) {
-	                String existingEmail = parts[4];
-	                if (existingEmail.equals(email)) {
-	                    return true; 
-	                }
-	            }
-	        }
-
-	    } catch (IOException | NumberFormatException e) {
-	        e.printStackTrace();
-	    }
-
-	    return false; 
+	    return "valid";
 	}
 	
-	
-	public String Validate(Employee emp)
-	{
-		String message = "valid";
-		
-		int ID = emp.getID();
-		if (isDuplicateID(ID, outputFilePath)) 
-		{
-		    message = "Duplicate ID! This ID already exists";
-		    return message;
-		    
-		} 
-	
-		String firstName = emp.getFirstName();
-		if(firstName.isEmpty())
-		{
-			message = "First Name cannot be empty";
-			return message;
-		}
-		
-		
-		String lastName = emp.getLastName();
-		if(lastName.isEmpty())
-		{
-			message = "Last Name cannot be empty";
-			return message;
-		}
-		
-		String mobile = emp.getMobileNumber();
-		if (!mobile.matches("\\d{10}"))
-		{
-		    message = "Invalid mobile number. Must be 10 digits.";
-		    return message;
-		}
-		else if(isDuplicateMobile(mobile))
-		{
-			message = "Duplicate mobile number.";
-		}
-		
-		String email = emp.getEmail();
+	public String isValidEmail(String email) {
 		if(!email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}"))
-		{
-			message = "Invalid email address.";
-			return message;
-		}
-		else if(isDuplicateEmail(email))
-		{
-			message = "Duplicate email address";
-		}
-		
-		boolean active = emp.isActive();
-		
-		LocalDate date = emp.getJoiningDate();
-		LocalDate today = LocalDate.now();
-		LocalDate establishedDate = LocalDate.of(2009, 6, 30);
-		if(date.isAfter(today) || date.isBefore(establishedDate))
-		{
-			message = "Invalid joining date.";
-			return message;
-		}
-		
-		return message;
+			return "Invalid email address.";
+	    return "valid";
 	}
+	
+	public String isValidJoiningDate(String dateStr)
+	{
+		 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+	    try {
+	        LocalDate date = LocalDate.parse(dateStr, formatter);
+	        LocalDate establishedDate = LocalDate.of(2009, 6, 30);
+	        LocalDate today = LocalDate.now();
+	        if(date.isAfter(today) || date.isBefore(establishedDate))
+				return "Invalid joining date.";
+			
+	    } catch (DateTimeParseException e) {
+	        return "Invalid date format. Please use YYYY-MM-DD.";
+	    }
+	    return "valid";
+		
+	}
+	
+	public String isValidActiveStatus(String active) {
+		active = active.toLowerCase();
+		if(!active.equals("true") && !active.equals("false"))
+			return "Enter valid active status(true/false)";
+		return "valid";
+	}
+	
 }
