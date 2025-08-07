@@ -1,10 +1,9 @@
 package com.litmus7.employeemanager.controller;
 import com.litmus7.employeemanager.dto.Employee;
 import com.litmus7.employeemanager.dto.Response;
+import com.litmus7.employeemanager.service.EmployeeService;
 import com.litmus7.employeemanager.util.ValidationUtil;
 import com.litmus7.employeemanager.util.TextFileUtil;
-import com.litmus7.employeemanager.util.ServiceUtil;
-
 
 import java.io.*;
 import java.time.format.DateTimeFormatter;
@@ -16,8 +15,9 @@ public class EmployeeController {
 	
 	private String inputFilePath ;
 	private String outputFilePath ;
+
 	ValidationUtil val = new ValidationUtil();
-	ServiceUtil service = new ServiceUtil();
+	EmployeeService service = new EmployeeService();
 	
 	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	HashSet<String> idSet = new HashSet<>();
@@ -28,7 +28,7 @@ public class EmployeeController {
 	public EmployeeController(String inputFilePath, String outputFilePath) throws IOException
 	{
 		this.inputFilePath = inputFilePath;
-		this.outputFilePath = outputFilePath;
+		this.outputFilePath = outputFilePath;		
 		
 		File file = new File(outputFilePath);
 
@@ -85,24 +85,27 @@ public class EmployeeController {
 	
 	public Response<Integer> writeDataToCSV() 
 	{
-		PrintWriter writer;
-		Response<Integer> result;
+		PrintWriter writer = null;
 		int rows = 0;
 		try {
 			writer = new PrintWriter(new FileWriter(outputFilePath, true));
 			TextFileUtil.convertDataToCSV(employees, writer);
 		    for(Employee emp: employees)
 		    {
-		    	result = service.createEmployee(emp);	
-		    	rows +=  (int) result.getData();
-		    	if(!result.isSuccess())
-		    		return result;
+		    	int result = service.createEmployee(emp);	
+		    	rows += result;
+		    	if(result == 0)
+		    		return new Response<>(true, "Insertion Failed!", 0);
 		    }
-		    employees.clear();
-		    writer.close();
+		    
 		    return new Response<>(true, "Inserted " + rows + " records", rows);
 		} catch (IOException e) {
 			return new Response<>(false, "Invalid file paths", 0);
+		}
+		finally
+		{
+			employees.clear();
+			writer.close();
 		}
 	
 	}
@@ -129,14 +132,16 @@ public class EmployeeController {
 	
 	public Response<String> getAllEmployees()
 	{
+		
 		StringBuilder result = new StringBuilder();
 		result.append("-----------Employee Records-----------\n");
-		Response<List<Employee>> employees = service.getAllEmployees();
-		if(employees.getData() == null)
+		List<Employee> employees = new ArrayList<>();
+		employees = service.getAllEmployees();
+		if(employees == null)
 			return new Response<>(false, "Failed to load the data", "");
 		else
 		{
-			for(Employee emp: employees.getData())
+			for(Employee emp: employees)
 			{
 				result.append(TextFileUtil.displayData(emp));
 			}
@@ -147,14 +152,16 @@ public class EmployeeController {
 	
 	public Response<String> getEmployeeById(int empId)
 	{
+		if (!idSet.contains(Integer.toString(empId)))
+			return new Response<>(false, "ID doesn't exist in records", "");
 		StringBuilder result = new StringBuilder();
 		result.append("-----------Employee Details-----------\n");
-		Response<Employee> emp = service.getEmployeeById(empId);
-		if(emp.getData() == null)
+		Employee emp = service.getEmployeeById(empId);
+		if(emp == null)
 			return new Response<>(false, "Failed to load the data", "");
 		else
 		{
-			result.append(TextFileUtil.displayData(emp.getData()));
+			result.append(TextFileUtil.displayData(emp));
 			return new Response<>(true, "Loaded data", result.toString());
 		}
 		
@@ -165,10 +172,15 @@ public class EmployeeController {
 	{
 		if (!idSet.contains(Integer.toString(empId)))
 			return new Response<>(false, "ID doesn't exist in records", 0);
-		Response<Integer> result = service.deleteEmployeeById(empId);
-		if(result.isSuccess())
+		int result = service.deleteEmployeeById(empId);
+		if (result > 0)
+		{
 			idSet.remove(Integer.toString(empId));
-		return result;
+			return new Response<>(true, "Deleted " + result + " record", result);
+		}
+			
+		else
+			return new Response<>(false, "Deletion Failed!", result);
 	}
 	
 	
@@ -185,8 +197,12 @@ public class EmployeeController {
 			return new Response<>(false, "Invalid data! " + message, 0);
 		
 		Employee emp = new Employee(ID, firstName, lastName, mobile, email, joiningDate, active);
-		Response<Integer> result = service.updateEmployee(emp);
-		return result;
+		int result = service.updateEmployee(emp);
+		if (result > 0)
+			return new Response<>(true, "Updated " + result + " record", result);
+			
+		else
+			return new Response<>(false, "Updation Failed!", result);
 	}
 	
 	
