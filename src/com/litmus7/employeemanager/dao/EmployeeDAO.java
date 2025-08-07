@@ -28,7 +28,6 @@ public class EmployeeDAO{
 				pstmt.setBoolean(7, Boolean.parseBoolean(emp.getActiveStatus())); 
 
 	            rows = pstmt.executeUpdate();
-	            conn.close();
 	            return rows;
 	            
 	            
@@ -55,7 +54,6 @@ public class EmployeeDAO{
 												myRs.getString("active_status"));
 					employees.add(emp);
 				}
-				conn.close();
 				return employees;
 					
 	        } catch (SQLException e) {
@@ -82,7 +80,6 @@ public class EmployeeDAO{
 							myRs.getString("mobile"), myRs.getString("email"), myRs.getString("joining_date"),
 							myRs.getString("active_status"));
 				}
-				conn.close();
 				return emp;
                 	
 	        } catch (SQLException e) {
@@ -100,9 +97,8 @@ public class EmployeeDAO{
 				Connection conn = DBConnectionUtil.getConnection();
 	            PreparedStatement pstmt = conn.prepareStatement(sqlQueryToDeleteData)
 	        ) {
-				pstmt.setDouble(1, empId);
-				conn.close();
-	            return pstmt.executeUpdate();
+			pstmt.setDouble(1, empId);
+	            	return pstmt.executeUpdate();
 	        } catch (SQLException e) {
 
 	            return 0;
@@ -129,7 +125,6 @@ public class EmployeeDAO{
             pstmt.setInt(7, Integer.parseInt(emp.getID()));   
           
             int result = pstmt.executeUpdate();
-            conn.close();
             return result;
         } catch (SQLException e) {
             return 0;
