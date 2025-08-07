@@ -41,7 +41,7 @@ public class EmployeeController {
 	
 	
 	
-	public String getDataFromTextFile()
+	public Response<String> getDataFromTextFile()
 	{
 	
 		StringBuilder result = new StringBuilder();
@@ -49,7 +49,6 @@ public class EmployeeController {
 		try (BufferedReader reader = new BufferedReader(new FileReader(inputFilePath))) 
 		{
             String line;
-            String message;
             int count = 0;
 
             while ((line = reader.readLine()) != null) {
@@ -57,11 +56,10 @@ public class EmployeeController {
             	String[] parts = line.split("\\$");
             	
             	
-            	message = checkIfDataValid(parts[0], parts[1], parts[2], 
-            							   parts[3], parts[4], parts[5], parts[6]);
-            	
-            	if(!message.equals("valid"))
-            		return (message + " line " + count);
+            	Response<Integer> valid = service.checkIfDataValid(parts[0], parts[1], parts[2], 
+            							   parts[3], parts[4], parts[5], parts[6], idSet);
+            	if(!valid.isSuccess())
+            		return new Response<>(false, valid.getMessage() + " line " + count, null);
 
             	idSet.add(parts[0]); // ID
                 
@@ -75,10 +73,10 @@ public class EmployeeController {
             reader.close();
 
         } catch (IOException e) {
-            return "Invalid input file path!";
+            return new Response<>(false, "Invalid input file path!", null);
         }
 		
-		return result.toString();
+		return new Response<>(true, "Success", result.toString());
 	}
 	
 	
@@ -116,10 +114,10 @@ public class EmployeeController {
 										String active)
 	{
 		Response<Integer> result ;
-		String message = checkIfDataValid(ID, firstName, lastName, mobile, email, joiningDate, active);
+		Response<Integer> valid = service.checkIfDataValid(ID, firstName, lastName, mobile, email, joiningDate, active, idSet);
 		
-		if(!message.equals("valid"))
-			return new Response<>(false, "Invalid data! " + message, 0);
+		if(!valid.isSuccess())
+			return new Response<>(false, "Invalid data! " + valid.getMessage(), 0);
 		
 		idSet.add(ID);
 		
@@ -191,10 +189,10 @@ public class EmployeeController {
 		if (!idSet.contains(ID))
 			return new Response<>(false, "ID doesn't exist in records", 0);
 		idSet.remove(ID);
-		String message = checkIfDataValid(ID, firstName, lastName, mobile, email, joiningDate, active);
+		Response<Integer> valid = service.checkIfDataValid(ID, firstName, lastName, mobile, email, joiningDate, active, idSet);
 		idSet.add(ID);
-		if(!message.equals("valid"))
-			return new Response<>(false, "Invalid data! " + message, 0);
+		if(!valid.isSuccess())
+			return new Response<>(false, "Invalid data! " + valid.getMessage(), 0);
 		
 		Employee emp = new Employee(ID, firstName, lastName, mobile, email, joiningDate, active);
 		int result = service.updateEmployee(emp);
@@ -205,8 +203,6 @@ public class EmployeeController {
 			return new Response<>(false, "Updation Failed!", result);
 	}
 	
-	
-
 	private void getAllIDsFromCSV() throws IOException 
 	{
 	
@@ -227,48 +223,6 @@ public class EmployeeController {
 	        reader.close();
 	}
 	
-	private String checkIfDataValid(String ID, String firstName, String lastName, 
-							String mobile, String email, String dateStr, String active)
-	{
-		String message;
-		
-        if( idSet.contains(ID) )
-        	return "Duplicate ID!";
-        message = val.isValidID(ID);
-        if(!message.equals("valid"))
-        	return message;
-        
-   
-        message = val.isValidName(firstName);
-        if(!message.equals("valid"))
-        	return (message);
-        
-        
-        message = val.isValidName(lastName);
-        if(!message.equals("valid"))
-        	return (message);
-        
-        
-        message = val.isValidNumber(mobile);
-        if(!message.equals("valid"))
-        	return (message);
-        
-       
-        message = val.isValidEmail(email);
-        if(!message.equals("valid"))
-        	return (message);
-        
-        
-        message = val.isValidJoiningDate(dateStr);
-        if(!message.equals("valid"))
-        	return (message);
-        
-        message = val.isValidActiveStatus(active);
-        if(!message.equals("valid"))
-        	return (message);
-        
-        return "valid";
-        
-	}
+	
 	
 }
