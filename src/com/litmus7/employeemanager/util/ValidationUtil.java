@@ -39,7 +39,7 @@ public class ValidationUtil
 
 	    if (!mobileNumber.matches("\\d{10}"))
 	        return "Invalid mobile number. Must be 10 digits.";
-	    	// does not define if it is format error
+	    	
 
 	    return "valid";
 	}
