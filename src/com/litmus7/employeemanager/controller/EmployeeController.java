@@ -4,7 +4,7 @@ import com.litmus7.employeemanager.dto.Response;
 import com.litmus7.employeemanager.util.ValidationUtil;
 import com.litmus7.employeemanager.util.TextFileUtil;
 import com.litmus7.employeemanager.util.ServiceUtil;
-import com.litmus7.employeemanager.dao.EmployeeDAO;
+
 
 import java.io.*;
 import java.time.format.DateTimeFormatter;
@@ -14,11 +14,8 @@ import java.util.List;
 
 public class EmployeeController {
 	
-	
-	String option;
-	String inputFilePath ;
-	String outputFilePath ;
-	EmployeeDAO dao = null;
+	private String inputFilePath ;
+	private String outputFilePath ;
 	ValidationUtil val = new ValidationUtil();
 	ServiceUtil service = new ServiceUtil();
 	
@@ -32,8 +29,6 @@ public class EmployeeController {
 	{
 		this.inputFilePath = inputFilePath;
 		this.outputFilePath = outputFilePath;
-		this.dao = new EmployeeDAO();
-		
 		
 		File file = new File(outputFilePath);
 
