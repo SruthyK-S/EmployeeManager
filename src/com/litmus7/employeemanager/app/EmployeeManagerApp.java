@@ -31,7 +31,7 @@ public class EmployeeManagerApp {
 			System.out.println("\nChoose one service");
 			System.out.println("1 - Read data from text file"
 					+ "\n2 - Add the read data to database"
-					+ "\n3 - Enter one employee data"
+					+ "\n3 - Enter data from console"
 					+ "\n4 - Get all employee data"
 					+ "\n5 - Get one employee data"
 					+ "\n6 - Delete one employee data"
@@ -46,8 +46,11 @@ public class EmployeeManagerApp {
 			    case "1":
 			    {
 
-			    	String result = controller.getDataFromTextFile();
-			    	System.out.println(result);
+			    	Response<String> result = controller.getDataFromTextFile();
+			    	if(!result.isSuccess())
+			    		System.out.println(result.getMessage());
+			    	else
+			    		System.out.println(result.getData());
 			    	break;
 			    	
 			    }
