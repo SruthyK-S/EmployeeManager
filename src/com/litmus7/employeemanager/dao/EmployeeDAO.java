@@ -1,5 +1,6 @@
 package com.litmus7.employeemanager.dao;
 import com.litmus7.employeemanager.dto.Employee;
+import com.litmus7.employeemanager.util.DBConnectionUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -7,31 +8,15 @@ import java.util.List;
 
 
 public class EmployeeDAO{
-	
-	private static final String URL = "jdbc:mysql://localhost:3306/employeedatabase";
-	private static final String USER = "";
-	private static final String PASSWORD = "";
-	Statement myStmt = null;
-	PreparedStatement preStmt = null ;
-	StringBuilder result = new StringBuilder();
-	Connection conn;
-	
-	public EmployeeDAO()
-	{
-		try 
-		{
-			this.conn = DriverManager.getConnection(URL, USER, PASSWORD);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-	
+	Connection conn = null;
+		
 	public int insertEmployeeDetailsToDatabase(Employee  emp)
 	{
 		String sqlQueryToInsertData = "INSERT INTO employee (id, first_name, last_name, mobile, email, joining_date, active_status) VALUES (?, ?, ?, ?, ?, ?, ?);";
 		int rows;
 		
 		try (
+				Connection conn = DBConnectionUtil.getConnection();
 	            PreparedStatement pstmt = conn.prepareStatement(sqlQueryToInsertData)
 	        ) {
 				pstmt.setInt(1, Integer.parseInt(emp.getID()));   
@@ -43,11 +28,14 @@ public class EmployeeDAO{
 				pstmt.setBoolean(7, Boolean.parseBoolean(emp.getActiveStatus())); 
 
 	            rows = pstmt.executeUpdate();
+	            conn.close();
 	            return rows;
+	            
 	            
 	        } catch (SQLException e) {
 	            return 0;
 	        }
+			
 	}
 	
 	
@@ -56,6 +44,7 @@ public class EmployeeDAO{
 		List<Employee> employees = new ArrayList<>();
 		String sqlQueryToGetAllEmployee = "select id, first_name, last_name, mobile, email, joining_date, active_status from employee;";
 		try (
+				Connection conn = DBConnectionUtil.getConnection();
 	            PreparedStatement pstmt = conn.prepareStatement(sqlQueryToGetAllEmployee)
 	        ) {
 				ResultSet myRs = pstmt.executeQuery();
@@ -66,6 +55,7 @@ public class EmployeeDAO{
 												myRs.getString("active_status"));
 					employees.add(emp);
 				}
+				conn.close();
 				return employees;
 					
 	        } catch (SQLException e) {
@@ -81,6 +71,7 @@ public class EmployeeDAO{
 		String sqlQueryToGetAnEmployee = "select id, first_name, last_name, mobile, email, joining_date, active_status from employee WHERE ID = ?;";
 		Employee emp = null;
 		try (
+				Connection conn = DBConnectionUtil.getConnection();
 	            PreparedStatement pstmt = conn.prepareStatement(sqlQueryToGetAnEmployee)
 	        ) {
 				pstmt.setInt(1, empId);
@@ -91,7 +82,7 @@ public class EmployeeDAO{
 							myRs.getString("mobile"), myRs.getString("email"), myRs.getString("joining_date"),
 							myRs.getString("active_status"));
 				}
-					
+				conn.close();
 				return emp;
                 	
 	        } catch (SQLException e) {
@@ -106,9 +97,11 @@ public class EmployeeDAO{
 		String sqlQueryToDeleteData = "DELETE FROM EMPLOYEE WHERE ID = ?";
 		
 		try (
+				Connection conn = DBConnectionUtil.getConnection();
 	            PreparedStatement pstmt = conn.prepareStatement(sqlQueryToDeleteData)
 	        ) {
 				pstmt.setDouble(1, empId);
+				conn.close();
 	            return pstmt.executeUpdate();
 	        } catch (SQLException e) {
 
@@ -124,8 +117,9 @@ public class EmployeeDAO{
 									+ "joining_date = ?, active_status = ? WHERE id = ?";
 
         try (
-            PreparedStatement pstmt = conn.prepareStatement(sqlQueryToUpdate)
-        ) {
+        		Connection conn = DBConnectionUtil.getConnection();
+        		PreparedStatement pstmt = conn.prepareStatement(sqlQueryToUpdate)
+        		) {
             pstmt.setString(1, emp.getFirstName());
             pstmt.setString(2, emp.getLastName());
             pstmt.setString(3, emp.getMobileNumber());
@@ -135,6 +129,7 @@ public class EmployeeDAO{
             pstmt.setInt(7, Integer.parseInt(emp.getID()));   
           
             int result = pstmt.executeUpdate();
+            conn.close();
             return result;
         } catch (SQLException e) {
             return 0;
