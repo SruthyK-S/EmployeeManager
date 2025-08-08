@@ -2,7 +2,6 @@ package com.litmus7.employeemanager.controller;
 import com.litmus7.employeemanager.dto.Employee;
 import com.litmus7.employeemanager.dto.Response;
 import com.litmus7.employeemanager.service.EmployeeService;
-import com.litmus7.employeemanager.util.ValidationUtil;
 import com.litmus7.employeemanager.util.TextFileUtil;
 
 import java.io.*;
@@ -16,7 +15,6 @@ public class EmployeeController {
 	private String inputFilePath ;
 	private String outputFilePath ;
 
-	ValidationUtil val = new ValidationUtil();
 	EmployeeService service = new EmployeeService();
 	
 	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
