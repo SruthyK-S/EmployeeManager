@@ -89,7 +89,7 @@ public class EmployeeManagerApp {
 			    case "4":
 			    {
 			    	Response<String> result = controller.getAllEmployees();
-			    	if(result.getStatus() != 200)
+			    	if(result.getStatus() == 200)
 			    		System.out.println(result.getData());
 			    	else
 			    		System.out.println(result.getMessage());
@@ -100,7 +100,7 @@ public class EmployeeManagerApp {
 			    	System.out.println("Enter the ID: ");
 			    	String ID = scn.next();
 			    	Response<String> result = controller.getEmployeeById(ID);
-			    	if(result.getStatus() != 200)
+			    	if(result.getStatus() == 200)
 			    		System.out.println(result.getData());
 			    	else
 			    		System.out.println(result.getMessage());
