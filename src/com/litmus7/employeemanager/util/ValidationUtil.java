@@ -10,7 +10,7 @@ public class ValidationUtil
 
 	String message = "valid";
 	
-	public String isValidID(String newID)
+	public static String isValidID(String newID)
 	{
 		try {
 	        int ID = Integer.parseInt(newID);
@@ -23,7 +23,7 @@ public class ValidationUtil
 		return "valid";
 	}
 	
-	public String isValidName(String name)
+	public static String isValidName(String name)
 	{
         if( name.isEmpty())
         	return "Name cannot be empty";
@@ -33,24 +33,23 @@ public class ValidationUtil
 		return "valid";
 	}
 	
-	public String isValidNumber(String mobileNumber) {
+	public static String isValidNumber(String mobileNumber) {
 	    if (mobileNumber == null || mobileNumber.isEmpty())
 	        return "Mobile Number cannot be empty";
 
 	    if (!mobileNumber.matches("\\d{10}"))
 	        return "Invalid mobile number. Must be 10 digits.";
-	    	
 
 	    return "valid";
 	}
 	
-	public String isValidEmail(String email) {
+	public static String isValidEmail(String email) {
 		if(!email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}"))
 			return "Invalid email address.";
 	    return "valid";
 	}
 	
-	public String isValidJoiningDate(String dateStr)
+	public static String isValidJoiningDate(String dateStr)
 	{
 		 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -68,7 +67,7 @@ public class ValidationUtil
 		
 	}
 	
-	public String isValidActiveStatus(String active) {
+	public static String isValidActiveStatus(String active) {
 		active = active.toLowerCase();
 		if(!active.equals("true") && !active.equals("false"))
 			return "Enter valid active status(true/false)";
