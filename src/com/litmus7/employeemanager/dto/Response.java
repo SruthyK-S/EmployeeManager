@@ -2,25 +2,25 @@ package com.litmus7.employeemanager.dto;
 
 public class Response<T>{
 	
-	private boolean success;
+	private int status;
 	private String message;
 	private T data;
 	
 	public Response() {}
 	
-	public Response(boolean success, String message, T data)
+	public Response(int status, String message, T data)
 	{
-		this.success = success;
+		this.status = status;
 		this.message = message;
 		this.data = data;
 	}
 
-	public boolean isSuccess() {
-		return success;
+	public int getStatus() {
+		return status;
 	}
 
-	public void setSuccess(boolean success) {
-		this.success = success;
+	public void setSuccess(int status) {
+		this.status = status;
 	}
 
 	public String getMessage() {
