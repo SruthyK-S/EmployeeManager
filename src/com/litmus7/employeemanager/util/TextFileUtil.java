@@ -23,21 +23,10 @@ public class TextFileUtil
 	    	csv.append(emp.getJoiningDate()).append(",");
 	    	csv.append(emp.getActiveStatus()).append(",");
 	    	
-	    	writer.println(csv.toString());
-	    	
-	    	
-	    }
-	  
+	    	writer.println(csv.toString());	
+	    }  
 	}
 	
-	public static void createHeader(File file)
-	{
-		try (PrintWriter writer = new PrintWriter(new FileWriter(file, true))) {
-            writer.println("ID,First Name,Last Name,Mobile,Email,Joining Date,Active");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-	}
 	
 	public static String displayData(Employee emp)
 	{
@@ -53,5 +42,10 @@ public class TextFileUtil
         result.append("--------------------------------------\n");
         
         return result.toString();
+	}
+	
+	public static String[] splitByDelimiter(String delimiter, String data)
+	{
+		return data.split("\\$");
 	}
 }
