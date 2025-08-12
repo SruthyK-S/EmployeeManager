@@ -1,9 +1,9 @@
 package com.litmus7.employeemanager.app;
 import com.litmus7.employeemanager.controller.EmployeeController;
+import com.litmus7.employeemanager.dto.Employee;
 import com.litmus7.employeemanager.dto.Response;
 
 import java.util.Scanner;
-import java.io.IOException;
 
 
 public class EmployeeManagerApp {
@@ -12,15 +12,8 @@ public class EmployeeManagerApp {
 	{
 		
 		final String inputFilePath = "employees.txt";
-		final String outputFilePath = "employees.csv";
 		Scanner scn = new Scanner(System.in);  
-		EmployeeController controller = null;
-		try 
-		{
-			controller = new EmployeeController(inputFilePath, outputFilePath);
-		} catch (IOException e) {
-			System.out.println("Invalid file path!");
-		}
+		EmployeeController controller = new EmployeeController();
 		
 		String option;
 		System.out.println("Employee Management App");
@@ -31,11 +24,11 @@ public class EmployeeManagerApp {
 			System.out.println("\nChoose one service");
 			System.out.println("1 - Read data from text file"
 					+ "\n2 - Add the read data to database"
-					+ "\n3 - Enter data from console"
+					+ "\n3 - Create an employee"
 					+ "\n4 - Get all employee data"
-					+ "\n5 - Get one employee data"
-					+ "\n6 - Delete one employee data"
-					+ "\n7 - Update one employee data"
+					+ "\n5 - Get an employee data"
+					+ "\n6 - Delete an employee data"
+					+ "\n7 - Update an employee data"
 					+ "\n8 - Quit"
 					);
 			
@@ -46,8 +39,8 @@ public class EmployeeManagerApp {
 			    case "1":
 			    {
 
-			    	Response<String> result = controller.getDataFromTextFile();
-			    	if(!result.isSuccess())
+			    	Response<String> result = controller.getDataFromTextFile(inputFilePath);
+			    	if(result.getStatus() != 200)
 			    		System.out.println(result.getMessage());
 			    	else
 			    		System.out.println(result.getData());
@@ -56,7 +49,7 @@ public class EmployeeManagerApp {
 			    }
 			    case "2": 
 			    {
-			    	Response<Integer> result = controller.writeDataToCSV();
+			    	Response<Integer> result = controller.writeDataToDatabase();
 			    	System.out.println(result.getMessage());
 			    	break;
 			    }
@@ -87,9 +80,8 @@ public class EmployeeManagerApp {
 			    	System.out.println("Active Status(true/false) : ");
 			    	String activeStatus = scn.next();
 
-			    	
-			    	Response<Integer> result = controller.getSingleDataFromUser(ID, firstName, lastName, mobile,
-			    										  email, date, activeStatus);
+			    	Employee emp = new Employee(ID, firstName, lastName, mobile, email, date, activeStatus);
+			    	Response<Integer> result = controller.createEmployee(emp);
 			    	
 		    		System.out.println(result.getMessage());
 		    		break;
@@ -97,7 +89,7 @@ public class EmployeeManagerApp {
 			    case "4":
 			    {
 			    	Response<String> result = controller.getAllEmployees();
-			    	if(result.isSuccess())
+			    	if(result.getStatus() != 200)
 			    		System.out.println(result.getData());
 			    	else
 			    		System.out.println(result.getMessage());
@@ -106,9 +98,9 @@ public class EmployeeManagerApp {
 			    case "5":
 			    {
 			    	System.out.println("Enter the ID: ");
-			    	int ID = scn.nextInt();
+			    	String ID = scn.next();
 			    	Response<String> result = controller.getEmployeeById(ID);
-			    	if(result.isSuccess())
+			    	if(result.getStatus() != 200)
 			    		System.out.println(result.getData());
 			    	else
 			    		System.out.println(result.getMessage());
@@ -117,7 +109,7 @@ public class EmployeeManagerApp {
 			    case "6":
 			    {
 			    	System.out.println("Enter the ID of employee to be deleted: ");
-			    	int ID = scn.nextInt();
+			    	String ID = scn.next();
 			    	Response<Integer> result = controller.deleteEmployeeById(ID);
 			    	System.out.println(result.getMessage());	
 			    	break;
@@ -149,10 +141,10 @@ public class EmployeeManagerApp {
 			    	
 			    	System.out.println("Active Status(true/false) : ");
 			    	String activeStatus = scn.next();
-
 			    	
-			    	Response<Integer> result = controller.updateEmployee(ID, firstName, lastName, mobile,
-			    										  email, date, activeStatus);
+			    	Employee emp = new Employee(ID, firstName, lastName, mobile, email, date, activeStatus);
+			    	
+			    	Response<Integer> result = controller.updateEmployee(emp);
 			    	
 			    	System.out.println(result.getMessage());	
 			    	break;
