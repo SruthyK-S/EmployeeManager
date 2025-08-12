@@ -1,128 +1,94 @@
 package com.litmus7.employeemanager.controller;
+import com.litmus7.employeemanager.constants.MessageConstants;
+import com.litmus7.employeemanager.constants.SuccessCodesConstants;
 import com.litmus7.employeemanager.dto.Employee;
 import com.litmus7.employeemanager.dto.Response;
 import com.litmus7.employeemanager.service.EmployeeService;
 import com.litmus7.employeemanager.util.TextFileUtil;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.List;
 
 public class EmployeeController {
 	
-	private String inputFilePath ;
-	private String outputFilePath ;
 
-	EmployeeService service = new EmployeeService();
+	private EmployeeService service = new EmployeeService();
 	
 	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	HashSet<String> idSet = new HashSet<>();
-	
-	List<Employee> employees = new ArrayList<>();
-	
-	
-	public EmployeeController(String inputFilePath, String outputFilePath) throws IOException
-	{
-		this.inputFilePath = inputFilePath;
-		this.outputFilePath = outputFilePath;		
-		
-		File file = new File(outputFilePath);
 
-	    if (!file.exists() || file.length() == 0) 
-	    	TextFileUtil.createHeader(file);
-	    else  
-	    	this.getAllIDsFromCSV();
-	    
-	}
+	
+	private List<Employee> employees = new ArrayList<>();
 	
 	
-	
-	public Response<String> getDataFromTextFile()
+	public Response<String> getDataFromTextFile(String inputFilePath)
 	{
+		if (inputFilePath == null || inputFilePath.trim().isEmpty()) {
+	        return new Response<>(SuccessCodesConstants.BAD_REQUEST, MessageConstants.INPUT_FILE_PATH_EMPTY, null);
+	    }
 	
 		StringBuilder result = new StringBuilder();
 		result.append("------- Records From Text File -------\n");
 		try (BufferedReader reader = new BufferedReader(new FileReader(inputFilePath))) 
 		{
-            String line;
-            int count = 0;
-
-            while ((line = reader.readLine()) != null) {
-            	count++;
-            	String[] parts = line.split("\\$");
-            	
-            	
-            	Response<Integer> valid = service.checkIfDataValid(parts[0], parts[1], parts[2], 
-            							   parts[3], parts[4], parts[5], parts[6], idSet);
-            	if(!valid.isSuccess())
-            		return new Response<>(false, valid.getMessage() + " line " + count, null);
-
-            	idSet.add(parts[0]); // ID
-                
-                Employee emp = new Employee(parts[0], parts[1], parts[2], 
-						   					parts[3], parts[4], parts[5], parts[6]);
-                employees.add(emp);
-                
-                result.append(TextFileUtil.displayData(emp));
-                
+			List<String> lines = reader.lines().toList();
+            employees = service.getDataFromTextFile(lines);
+            for(Employee emp : employees)
+            {
+            	result.append(TextFileUtil.displayData(emp));
             }
-            reader.close();
-
+            
+            return new Response<>(SuccessCodesConstants.SUCCESS, MessageConstants.DATA_RETRIEVED, result.toString());
         } catch (IOException e) {
-            return new Response<>(false, "Invalid input file path!", null);
+            return new Response<>(SuccessCodesConstants.NOT_FOUND, MessageConstants.INVALID_FILE_PATH, null);
         }
 		
-		return new Response<>(true, "Success", result.toString());
+		
 	}
 	
 	
 	
-	public Response<Integer> writeDataToCSV() 
+	public Response<Integer> writeDataToDatabase() 
 	{
-		PrintWriter writer = null;
-		int rows = 0;
+		
 		try {
-			writer = new PrintWriter(new FileWriter(outputFilePath, true));
-			TextFileUtil.convertDataToCSV(employees, writer);
+			int rows = 0;		
 		    for(Employee emp: employees)
 		    {
+		    	
+		    	if(service.isDuplicateId(emp.getID()))
+		    	{
+		    		employees.clear();
+		    		return new Response<>(SuccessCodesConstants.BAD_REQUEST, "Inserted " + rows + " record\n" + "Duplicate ID!", 0);
+		    	}
+		    	String message = service.checkIfDataValid(emp);
+		    	if(!message.equals("valid"))
+		    	{
+		    		employees.clear();
+		    		return new Response<>(SuccessCodesConstants.BAD_REQUEST, "Inserted " + rows + " record\n" + message, rows);
+		    	}
 		    	int result = service.createEmployee(emp);	
 		    	rows += result;
 		    	if(result == 0)
-		    		return new Response<>(true, "Insertion Failed!", 0);
+		    		return new Response<>(SuccessCodesConstants.INTERNAL_ERROR, MessageConstants.FAILED_TO_PROCESS, 0);
 		    }
 		    
-		    return new Response<>(true, "Inserted " + rows + " records", rows);
-		} catch (IOException e) {
-			return new Response<>(false, "Invalid file paths", 0);
+		    return new Response<>(SuccessCodesConstants.SUCCESS, "Inserted " + rows + " record", rows);
+
+		} catch(Exception e) {
+			return new Response<>(SuccessCodesConstants.BAD_REQUEST, "Error! " + e.getMessage(), 0);
 		}
-		finally
-		{
-			employees.clear();
-			writer.close();
-		}
-	
 	}
 	
 	
-	public Response<Integer> getSingleDataFromUser(String ID, String firstName, String lastName, 
-										String mobile, String email, String joiningDate, 
-										String active)
+	public Response<Integer> createEmployee(Employee emp)
 	{
-		Response<Integer> result ;
-		Response<Integer> valid = service.checkIfDataValid(ID, firstName, lastName, mobile, email, joiningDate, active, idSet);
 		
-		if(!valid.isSuccess())
-			return new Response<>(false, "Invalid data! " + valid.getMessage(), 0);
-		
-		idSet.add(ID);
-		
-		Employee emp = new Employee(ID, firstName, lastName, mobile, email, joiningDate, active);
 		employees.add(emp);
-		result = writeDataToCSV();
-		return result;
+		return writeDataToDatabase();
 		
 	}
 	
@@ -134,92 +100,80 @@ public class EmployeeController {
 		List<Employee> employees = new ArrayList<>();
 		employees = service.getAllEmployees();
 		if(employees == null)
-			return new Response<>(false, "Failed to load the data", "");
+			return new Response<>(SuccessCodesConstants.INTERNAL_ERROR, MessageConstants.FAILED_TO_PROCESS, null);
 		else
 		{
 			for(Employee emp: employees)
 			{
 				result.append(TextFileUtil.displayData(emp));
 			}
-			return new Response<>(true, "Loaded data", result.toString());
+			return new Response<>(SuccessCodesConstants.SUCCESS, MessageConstants.DATA_RETRIEVED, result.toString());
 		}
 			
 	}
 	
-	public Response<String> getEmployeeById(int empId)
+	public Response<String> getEmployeeById(String empId)
 	{
-		if (!idSet.contains(Integer.toString(empId)))
-			return new Response<>(false, "ID doesn't exist in records", "");
-		StringBuilder result = new StringBuilder();
-		result.append("-----------Employee Details-----------\n");
-		Employee emp = service.getEmployeeById(empId);
-		if(emp == null)
-			return new Response<>(false, "Failed to load the data", "");
-		else
-		{
-			result.append(TextFileUtil.displayData(emp));
-			return new Response<>(true, "Loaded data", result.toString());
-		}
-		
-	}
-	
-	
-	public Response<Integer> deleteEmployeeById(int empId)
-	{
-		if (!idSet.contains(Integer.toString(empId)))
-			return new Response<>(false, "ID doesn't exist in records", 0);
-		int result = service.deleteEmployeeById(empId);
-		if (result > 0)
-		{
-			idSet.remove(Integer.toString(empId));
-			return new Response<>(true, "Deleted " + result + " record", result);
-		}
-			
-		else
-			return new Response<>(false, "Deletion Failed!", result);
-	}
-	
-	
-	public Response<Integer> updateEmployee(String ID, String firstName, String lastName, 
-			String mobile, String email, String joiningDate, 
-			String active) 
-	{
-		if (!idSet.contains(ID))
-			return new Response<>(false, "ID doesn't exist in records", 0);
-		idSet.remove(ID);
-		Response<Integer> valid = service.checkIfDataValid(ID, firstName, lastName, mobile, email, joiningDate, active, idSet);
-		idSet.add(ID);
-		if(!valid.isSuccess())
-			return new Response<>(false, "Invalid data! " + valid.getMessage(), 0);
-		
-		Employee emp = new Employee(ID, firstName, lastName, mobile, email, joiningDate, active);
-		int result = service.updateEmployee(emp);
-		if (result > 0)
-			return new Response<>(true, "Updated " + result + " record", result);
-			
-		else
-			return new Response<>(false, "Updation Failed!", result);
-	}
-	
-	private void getAllIDsFromCSV() throws IOException 
-	{
-	
-		    BufferedReader reader = new BufferedReader(new FileReader(outputFilePath));
-		    
-	        String line;
-	        reader.readLine();
-	
-	        while ((line = reader.readLine()) != null) 
-	        {
-	            String[] parts = line.split(",");
-	            if (parts.length > 0) 
-	            {
-	                String ID = parts[0].trim();
-	                idSet.add(ID);
-	            }
+		try {
+			if (empId == null || empId.trim().isEmpty()) {
+	            return new Response<>(SuccessCodesConstants.BAD_REQUEST, MessageConstants.EMPTY_ID, null);
 	        }
-	        reader.close();
+			
+			if (!service.isDuplicateId(empId))
+				return new Response<>(SuccessCodesConstants.NOT_FOUND, MessageConstants.ID_NOT_FOUND, null);
+			StringBuilder result = new StringBuilder();
+			result.append("-----------Employee Details-----------\n");
+			Employee emp = service.getEmployeeById(Integer.parseInt(empId));
+			if(emp == null)
+				return new Response<>(SuccessCodesConstants.INTERNAL_ERROR, MessageConstants.FAILED_TO_PROCESS, null);
+			else
+			{
+				result.append(TextFileUtil.displayData(emp));
+				return new Response<>(SuccessCodesConstants.SUCCESS, MessageConstants.DATA_RETRIEVED, result.toString());
+			}
+		}catch (Exception e) {
+			return new Response<>(SuccessCodesConstants.BAD_REQUEST, "Error " + e.getMessage() , null);
+		}
+		
 	}
+	
+	
+	public Response<Integer> deleteEmployeeById(String empId)
+	{
+		try {
+			if (!service.isDuplicateId(empId))
+				return new Response<>(SuccessCodesConstants.NOT_FOUND, MessageConstants.ID_NOT_FOUND, 0);
+			int result = service.deleteEmployeeById(Integer.parseInt(empId));
+			if (result > 0)
+				return new Response<>(SuccessCodesConstants.SUCCESS, "Deleted " + result + " record", result);
+			else
+				return new Response<>(SuccessCodesConstants.INTERNAL_ERROR, MessageConstants.FAILED_TO_PROCESS, result);
+		} catch(Exception e) {
+			return new Response<>(SuccessCodesConstants.BAD_REQUEST, "Error " + e.getMessage(), null);
+		}
+	}
+	
+	
+	public Response<Integer> updateEmployee(Employee emp) 
+	{
+		try {
+			if(!service.isDuplicateId(emp.getID()))
+	    		return new Response<>(SuccessCodesConstants.NOT_FOUND, MessageConstants.ID_NOT_FOUND, 0);
+	    	String message = service.checkIfDataValid(emp);
+	    	if(!message.equals("valid"))
+	    		return new Response<>(SuccessCodesConstants.BAD_REQUEST, message, 0);
+			
+			int result = service.updateEmployee(emp);
+			if (result > 0)
+				return new Response<>(SuccessCodesConstants.SUCCESS, "Updated " + result + " record", result);
+				
+			else
+				return new Response<>(SuccessCodesConstants.INTERNAL_ERROR, MessageConstants.FAILED_TO_PROCESS, result);
+		}catch(Exception e) {
+			return new Response<>(SuccessCodesConstants.BAD_REQUEST, "Error " + e.getMessage(), 0);
+		}
+	}
+	
 	
 	
 	
