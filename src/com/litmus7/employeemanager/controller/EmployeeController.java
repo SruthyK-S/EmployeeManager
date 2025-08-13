@@ -60,12 +60,8 @@ public class EmployeeController {
 		    		employees.clear();
 		    		return new Response<>(SuccessCodesConstants.BAD_REQUEST, "Inserted " + rows + " record\n" + "Duplicate ID!", 0);
 		    	}
-		    	String message = service.checkIfDataValid(emp);
-		    	if(!message.equals("valid"))
-		    	{
-		    		employees.clear();
-		    		return new Response<>(SuccessCodesConstants.BAD_REQUEST, "Inserted " + rows + " record\n" + message, rows);
-		    	}
+		    	service.checkIfDataValid(emp);
+
 		    	int result = service.createEmployee(emp);	
 		    	rows += result;
 		    	if(result == 0)
@@ -166,10 +162,7 @@ public class EmployeeController {
 	public Response<Integer> updateEmployee(Employee emp) 
 	{
 		try {
-	    	String message = service.checkIfDataValid(emp);
-	    	if(!message.equals("valid"))
-	    		return new Response<>(SuccessCodesConstants.BAD_REQUEST, message, 0);
-			
+	    	service.checkIfDataValid(emp);		
 			int result = service.updateEmployee(emp);
 			if (result > 0)
 				return new Response<>(SuccessCodesConstants.SUCCESS, "Updated " + result + " record", result);
