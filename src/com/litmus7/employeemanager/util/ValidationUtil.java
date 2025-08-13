@@ -3,6 +3,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+import com.litmus7.employeemanager.exceptions.ValidationException;
+
 
 
 public class ValidationUtil 
@@ -10,46 +12,48 @@ public class ValidationUtil
 
 	String message = "valid";
 	
-	public static String isValidID(String newID)
+	public static boolean isValidID(String newID) throws ValidationException
 	{
 		try {
 	        int ID = Integer.parseInt(newID);
 	        if (ID <= 0)
-	        	return "Invalid ID! Please enter a positive integer greater than zero.";
+	        	throw new ValidationException("Invalid ID! Please enter a positive integer greater than zero.");
 	        
 	    } catch (NumberFormatException e) {
-	        return "Invalid ID! Please enter a valid numeric integer.";
+	    	throw new ValidationException ("Invalid ID! Please enter a valid numeric integer.");
 	    }
-		return "valid";
+		return true;
 	}
 	
-	public static String isValidName(String name)
+	public static boolean isValidName(String name) throws ValidationException
 	{
         if( name.isEmpty())
-        	return "Name cannot be empty";
+        	throw new ValidationException("Name cannot be empty");
         if (!name.matches("[a-zA-Z\\-' ]+"))
-        	return "Name should only contain letters!";
+        	throw new ValidationException("Name should only contain letters!");
        
-		return "valid";
+		return true;
 	}
 	
-	public static String isValidNumber(String mobileNumber) {
+	public static boolean isValidNumber(String mobileNumber) throws ValidationException
+	{
 	    if (mobileNumber == null || mobileNumber.isEmpty())
-	        return "Mobile Number cannot be empty";
+	    	throw new ValidationException("Mobile Number cannot be empty");
 
 	    if (!mobileNumber.matches("\\d{10}"))
-	        return "Invalid mobile number. Must be 10 digits.";
+	    	throw new ValidationException("Invalid mobile number. Must be 10 digits.");
 
-	    return "valid";
+	    return true;
 	}
 	
-	public static String isValidEmail(String email) {
+	public static boolean isValidEmail(String email) throws ValidationException
+	{
 		if(!email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}"))
-			return "Invalid email address.";
-	    return "valid";
+			throw new ValidationException("Invalid email address.");
+	    return true;
 	}
 	
-	public static String isValidJoiningDate(String dateStr)
+	public static boolean isValidJoiningDate(String dateStr) throws ValidationException
 	{
 		 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -58,20 +62,21 @@ public class ValidationUtil
 	        LocalDate establishedDate = LocalDate.of(2009, 6, 30);
 	        LocalDate today = LocalDate.now();
 	        if(date.isAfter(today) || date.isBefore(establishedDate))
-				return "Invalid joining date.";
+	        	throw new ValidationException("Invalid joining date.");
 			
 	    } catch (DateTimeParseException e) {
-	        return "Invalid date format. Please use YYYY-MM-DD.";
+	    	throw new ValidationException("Invalid date format. Please use YYYY-MM-DD.");
 	    }
-	    return "valid";
+	    return true;
 		
 	}
 	
-	public static String isValidActiveStatus(String active) {
+	public static boolean isValidActiveStatus(String active) throws ValidationException
+	{
 		active = active.toLowerCase();
 		if(!active.equals("true") && !active.equals("false"))
-			return "Enter valid active status(true/false)";
-		return "valid";
+			throw new ValidationException("Enter valid active status(true/false)");
+		return true;
 	}
 	
 }
