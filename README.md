@@ -1,4 +1,4 @@
-# Employee Data Management & File Processing System (Using BufferedReader & PrintWriter) 
+# Employee Data Management & File Processing System
 
 A Core Java application to manage employee data, demonstrating efficient file I/O, 
 data transformation, and user input handling with robust validation. Utilized
