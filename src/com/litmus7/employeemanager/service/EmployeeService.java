@@ -1,92 +1,140 @@
 package com.litmus7.employeemanager.service;
-import java.util.HashSet;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.litmus7.employeemanager.dto.Employee;
-import com.litmus7.employeemanager.dto.Response;
+import com.litmus7.employeemanager.exceptions.EmployeeDaoException;
+import com.litmus7.employeemanager.exceptions.EmployeeNotFoundException;
+import com.litmus7.employeemanager.exceptions.EmployeeServiceException;
+import com.litmus7.employeemanager.exceptions.ValidationException;
+import com.litmus7.employeemanager.util.TextFileUtil;
 import com.litmus7.employeemanager.util.ValidationUtil;
 import com.litmus7.employeemanager.dao.EmployeeDAO;
 
 
 public class EmployeeService {
-	EmployeeDAO dao = new EmployeeDAO();
-	ValidationUtil val = new ValidationUtil();
+	private EmployeeDAO dao = new EmployeeDAO();
 	
-	public int createEmployee(Employee  emp)
+	public int createEmployee(Employee  emp) throws EmployeeServiceException
 	{
-		return dao.insertEmployeeDetailsToDatabase(emp);
+		try {
+			return dao.saveEmployee(emp);
+        } catch (EmployeeDaoException e) {
+            throw new EmployeeServiceException("Service layer failed to save employee details.", e);
+        }
+		
 			
 	}
 	
-	public List<Employee> getAllEmployees()
+	public List<Employee> getAllEmployees() throws EmployeeServiceException
 	{
-
-		return dao.getAllEmployeeData();
-
+		try {
+            return dao.getAllEmployees();
+        } catch (EmployeeDaoException e) {
+            throw new EmployeeServiceException("Service layer failed to fetch employee details.", e);
+        }
 	}
 	
-	public Employee getEmployeeById(int empId)
-	{
-		
-		return dao.getEmployeeData(empId);
+	public Employee findEmployeeById(int id) throws EmployeeServiceException, EmployeeNotFoundException {
+        try {
+            return dao.getEmployeeById(id);
+        } catch (EmployeeDaoException e) {
+            throw new EmployeeServiceException("Service layer failed to fetch employee.", e);
+        }
+    }
 
+
+	
+	
+	public int deleteEmployeeById(int empId) throws EmployeeNotFoundException, EmployeeServiceException
+	{
+
+		try{
+			return dao.deleteEmployeeData(empId);
+		} catch (EmployeeDaoException e) {
+            throw new EmployeeServiceException("Service layer failed to delete employee.", e);
+        }
+		
 	}
 	
 	
-	public int deleteEmployeeById(int empId)
+	public int updateEmployee(Employee emp) throws EmployeeNotFoundException, EmployeeServiceException
 	{
 
-		return dao.deleteEmployeeData(empId);
+		try{
+			return dao.updateEmployee(emp);
+		} catch (EmployeeDaoException e) {
+            throw new EmployeeServiceException("Service layer failed to update employee details.", e);
+        }
 	}
 	
 	
-	public int updateEmployee(Employee emp) 
+	public List<Employee> getDataFromTextFile(List<String> lines) throws IOException 
+	{
+		List<Employee> employees = new ArrayList<Employee>();
+	
+	    for(String line : lines)
+	    {
+	    	
+	    	String[] parts = TextFileUtil.splitByDelimiter("\\$", line);    	
+	        Employee emp = new Employee(parts[0], parts[1], parts[2], 
+					   					parts[3], parts[4], parts[5], parts[6]);
+	        employees.add(emp);
+	    }
+	    return employees;
+	}
+	
+	private List<Integer> getAllIds() 
 	{
 
-		return dao.updateEmployee(emp);
+		return dao.getAllIds();
 	}
 	
 	
-	public Response<Integer> checkIfDataValid(String ID, String firstName, String lastName, 
-			String mobile, String email, String dateStr, String active, HashSet<String> idSet)
+	
+	public boolean isDuplicateId(String id) throws NumberFormatException
 	{
-		String message;
-		if( idSet.contains(ID) )
-			return new Response<>(false,  "Duplicate ID!", 0);
-		message = val.isValidID(ID);
-		if(!message.equals("valid"))
-			return new Response<>(false, message, 0);
+		List<Integer> ids = getAllIds();
+    	return ids.contains(Integer.parseInt(id));
+    		
+	}
+	
+	
+	public boolean checkIfDataValid(Employee emp) throws EmployeeServiceException
+	{
+		try
+		{
+			
+			ValidationUtil.isValidID(emp.getID());
+			
+			
+			
+			ValidationUtil.isValidName(emp.getFirstName());
+			
+			
+			ValidationUtil.isValidName(emp.getLastName());
+			
+			
+			
+			ValidationUtil.isValidNumber(emp.getMobileNumber());
+			
+			
+			ValidationUtil.isValidEmail(emp.getEmail());
+			
+			
+			ValidationUtil.isValidJoiningDate(emp.getJoiningDate());
+			
+			
+			ValidationUtil.isValidActiveStatus(emp.getActiveStatus());
+
+			return true;
+		}
+		catch(ValidationException e)
+		{
+			throw new EmployeeServiceException("Service layer failed to insert employee data.", e);
+		}
 		
-		
-		message = val.isValidName(firstName);
-		if(!message.equals("valid"))
-		return new Response<>(false, message, 0);
-		
-		
-		message = val.isValidName(lastName);
-		if(!message.equals("valid"))
-		return new Response<>(false, message, 0);
-		
-		
-		message = val.isValidNumber(mobile);
-		if(!message.equals("valid"))
-		return new Response<>(false, message, 0);
-		
-		
-		message = val.isValidEmail(email);
-		if(!message.equals("valid"))
-		return new Response<>(false, message, 0);
-		
-		
-		message = val.isValidJoiningDate(dateStr);
-		if(!message.equals("valid"))
-		return new Response<>(false, message, 0);
-		
-		message = val.isValidActiveStatus(active);
-		if(!message.equals("valid"))
-		return new Response<>(false, message, 0);
-		
-		return new Response<>(true, "valid" , 1);
 		
 	}
 	
