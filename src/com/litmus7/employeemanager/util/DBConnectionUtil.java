@@ -23,7 +23,7 @@ public class DBConnectionUtil {
             prop.load(input);
 
             URL = prop.getProperty("db.url");
-            USER = prop.getProperty("db.user");
+            USER = prop.getProperty("db.username");
             PASSWORD = prop.getProperty("db.password");
 
         } catch (IOException e) {
@@ -35,3 +35,4 @@ public class DBConnectionUtil {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 }
+
