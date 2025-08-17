@@ -10,7 +10,6 @@ import com.litmus7.employeemanager.exceptions.ValidationException;
 public class ValidationUtil 
 {
 
-	String message = "valid";
 	
 	public static boolean isValidID(String newID) throws ValidationException
 	{
